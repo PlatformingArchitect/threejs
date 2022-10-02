@@ -66,19 +66,19 @@ class App {
     }  
 
     _setupModel() {
-        // this._clock = new THREE.Clock();
+        this._clock = new THREE.Clock();
 
         const loader = new FBXLoader();
         loader.load('data/Rumba Dancing.fbx', object => {
-            // this._mixer = new THREE.AnimationMixer(object);
-            // const action = this._mixer.clipAction(object.animations[0]);
-            // action.play();
+            this._mixer = new THREE.AnimationMixer(object);
+            const action = this._mixer.clipAction(object.animations[0]);
+            action.play();
 
             this._scene.add(object);
 
             this._zoomFit(object, this._camera, "Z", true);
 
-            // this._clock = new THREE.Clock();
+            this._clock = new THREE.Clock();
         });
     }
 

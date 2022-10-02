@@ -107,12 +107,6 @@ class App{
     }  
 
     _setupModel() {      
-        // const loader = new ColladaLoader();
-        // loader.load('TEST2.dae',  function ( collada ) {
-        //     const avatar = collada.scene;
-        //     scene.add( avatar );
-        // } ); 
-
         const loader = new ColladaLoader();
         loader.load('TEST2.dae', object => {
             const loadcollada = object.scene;
