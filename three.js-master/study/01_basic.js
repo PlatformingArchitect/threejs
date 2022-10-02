@@ -14,20 +14,22 @@ class App{
         divContainer.appendChild(renderer.domElement); //캔버스 형식의 돔객체
         this._renderer=renderer;
 
-        const scene = new THREE.Scene();
+
 
         //collada 로드
 
-        const loadingManager = new THREE.LoadingManager( function () {
-            scene.add( object3D );
-        } );
+        // const loadingManager = new THREE.LoadingManager( function () {
+        //     scene.add( object3D );
+        // } );
 
-        const loader = new ColladaLoader(loadingManager);
-        loader.load('TEST2.dae',  function ( collada ) {
-            object3D = collada.scene;
-        } );
+        // const loader = new ColladaLoader();
+        // loader.load('TEST2.dae',  function ( collada ) {
+        //     const avatar = collada.scene;
+        //     scene.add( avatar );
+        // } );
 
         //scene 필드 의
+        const scene = new THREE.Scene();
         this._scene = scene;
 
         this._setupCamera();
@@ -43,60 +45,19 @@ class App{
     }
 
     _setupCamera() {
-        const width = this._divContainer.clientWidth;
-        const height = this._divContainer.clientHeight;
         const camera = new THREE.PerspectiveCamera(
-            120,
-            width/height,
-            1,
-            1000
+            75, 
+            window.innerWidth / window.innerHeight, 
+            0.1, 
+            100
         );
 
-        // const aspect = width/height;
-        // const camera = new THREE.OrthographicCamera(
-        //     -1*aspect, 1*aspect,
-        //     1,-1,
-        //     1,100
-        // );
+        camera.position.z = 2;
+        this._camera = camera;
 
-        // camera.zoom = 0.05;
-
-        camera.position.z=2;
-        this._camera=camera;
-
-        // const box = new THREE.Box3().setFromObject(object3D);
-        // const sizeBox = box.getSize(new THREE.Vector3()).length();
-        // const centerBox = box.getCenter(new THREE.Vector3());
-
-        // let offsetX = 0, offsetY = 0, offsetZ = 0;
-        // viewMode === "X" ? offsetX = 1 : (viewMode === "Y") ? 
-        //     offsetY = 1 : offsetZ = 1;
-            
-        // if(!bFront) {
-        //     offsetX *= -1;
-        //     offsetY *= -1;
-        //     offsetZ *= -1;
-        // }
-        // camera.position.set(
-        //     centerBox.x + offsetX, centerBox.y + offsetY, centerBox.z + offsetZ);
-
-        // const halfSizeModel = sizeBox * 0.5;
-        // const halfFov = THREE.Math.degToRad(camera.fov * .5);
-        // const distance = halfSizeModel / Math.tan(halfFov);
-        // const direction = (new THREE.Vector3()).subVectors(
-        //     camera.position, centerBox).normalize();
-        // const position = direction.multiplyScalar(distance).add(centerBox);
-
-        // camera.position.copy(position);
-        // camera.near = sizeBox / 100;
-        // camera.far = sizeBox * 100;
-
-        // camera.updateProjectionMatrix();
-
-        // camera.lookAt(centerBox.x, centerBox.y, centerBox.z);
-        // this._controls.target.set(centerBox.x, centerBox.y, centerBox.z);
-
+        this._scene.add(this._camera);
     }
+
 
     _setupControls() {
         new OrbitControls(this._camera, this._divContainer);
@@ -110,7 +71,55 @@ class App{
         this._scene.add(light);
     }
 
-    _setupModel() {       
+    _zoomFit(object3D, camera, viewMode, bFront) {
+        const box = new THREE.Box3().setFromObject(object3D);
+        const sizeBox = box.getSize(new THREE.Vector3()).length();
+        const centerBox = box.getCenter(new THREE.Vector3());
+
+        let offsetX = 0, offsetY = 0, offsetZ = 0;
+        viewMode === "X" ? offsetX = 1 : (viewMode === "Y") ? 
+            offsetY = 1 : offsetZ = 1;
+            
+        if(!bFront) {
+            offsetX *= -1;
+            offsetY *= -1;
+            offsetZ *= -1;
+        }
+        camera.position.set(
+            centerBox.x + offsetX, centerBox.y + offsetY, centerBox.z + offsetZ);
+
+            const halfSizeModel = sizeBox * 0.5;
+        // const halfFov = THREE.Math.degToRad(camera.fov * 0.5);
+        const halfFov = camera.fov;
+        const distance = halfSizeModel / Math.tan(halfFov);
+        const direction = (new THREE.Vector3()).subVectors(
+            camera.position, centerBox).normalize();
+        const position = direction.multiplyScalar(distance).add(centerBox);
+
+        camera.position.copy(position);
+        camera.near = sizeBox / 100;
+        camera.far = sizeBox * 100;
+
+        camera.updateProjectionMatrix();
+
+        camera.lookAt(centerBox.x, centerBox.y, centerBox.z);
+        // this._controls.target.set(centerBox.x, centerBox.y, centerBox.z);
+    }  
+
+    _setupModel() {      
+        // const loader = new ColladaLoader();
+        // loader.load('TEST2.dae',  function ( collada ) {
+        //     const avatar = collada.scene;
+        //     scene.add( avatar );
+        // } ); 
+
+        const loader = new ColladaLoader();
+        loader.load('TEST2.dae', object => {
+            const loadcollada = object.scene;
+            this._scene.add(loadcollada);
+
+            this._zoomFit(loadcollada, this._camera, "X", true);
+        } ); 
     }
 
     resize() {
