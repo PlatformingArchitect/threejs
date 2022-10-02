@@ -1,0 +1,143 @@
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { ColladaLoader } from 'three/examples/jsm/loaders/ColladaLoader';
+
+let object3D
+
+class App{
+    constructor() {
+        const divContainer = document.querySelector("#webgl-container");   // id가 webgl-container인 div를 가져와서 divContainer로 저장
+        this._divContainer = divContainer;  //다른 method에서도 불러올 수 있도록 this 설정
+
+        const renderer = new THREE.WebGLRenderer({antialias:true});
+        renderer.setPixelRatio(window.devicePixelRatio);
+        divContainer.appendChild(renderer.domElement); //캔버스 형식의 돔객체
+        this._renderer=renderer;
+
+        const scene = new THREE.Scene();
+
+        //collada 로드
+
+        const loadingManager = new THREE.LoadingManager( function () {
+            scene.add( object3D );
+        } );
+
+        const loader = new ColladaLoader(loadingManager);
+        loader.load('TEST2.dae',  function ( collada ) {
+            object3D = collada.scene;
+        } );
+
+        //scene 필드 의
+        this._scene = scene;
+
+        this._setupCamera();
+        this._setupLight();
+        this._setupModel();
+        this._setupControls();
+
+        window.onresize = this.resize.bind(this);  //창의 크기가 바뀌며 렌더와 카메라가 다시 잡혀야해서 리사이즈 사용
+        this.resize;
+
+        requestAnimationFrame(this.render.bind(this));
+
+    }
+
+    _setupCamera() {
+        const width = this._divContainer.clientWidth;
+        const height = this._divContainer.clientHeight;
+        const camera = new THREE.PerspectiveCamera(
+            120,
+            width/height,
+            1,
+            1000
+        );
+
+        // const aspect = width/height;
+        // const camera = new THREE.OrthographicCamera(
+        //     -1*aspect, 1*aspect,
+        //     1,-1,
+        //     1,100
+        // );
+
+        // camera.zoom = 0.05;
+
+        camera.position.z=2;
+        this._camera=camera;
+
+        // const box = new THREE.Box3().setFromObject(object3D);
+        // const sizeBox = box.getSize(new THREE.Vector3()).length();
+        // const centerBox = box.getCenter(new THREE.Vector3());
+
+        // let offsetX = 0, offsetY = 0, offsetZ = 0;
+        // viewMode === "X" ? offsetX = 1 : (viewMode === "Y") ? 
+        //     offsetY = 1 : offsetZ = 1;
+            
+        // if(!bFront) {
+        //     offsetX *= -1;
+        //     offsetY *= -1;
+        //     offsetZ *= -1;
+        // }
+        // camera.position.set(
+        //     centerBox.x + offsetX, centerBox.y + offsetY, centerBox.z + offsetZ);
+
+        // const halfSizeModel = sizeBox * 0.5;
+        // const halfFov = THREE.Math.degToRad(camera.fov * .5);
+        // const distance = halfSizeModel / Math.tan(halfFov);
+        // const direction = (new THREE.Vector3()).subVectors(
+        //     camera.position, centerBox).normalize();
+        // const position = direction.multiplyScalar(distance).add(centerBox);
+
+        // camera.position.copy(position);
+        // camera.near = sizeBox / 100;
+        // camera.far = sizeBox * 100;
+
+        // camera.updateProjectionMatrix();
+
+        // camera.lookAt(centerBox.x, centerBox.y, centerBox.z);
+        // this._controls.target.set(centerBox.x, centerBox.y, centerBox.z);
+
+    }
+
+    _setupControls() {
+        new OrbitControls(this._camera, this._divContainer);
+    }
+
+    _setupLight() {
+        const color = 0xffffff;
+        const intensity = 3;
+        const light = new THREE.DirectionalLight(color, intensity);
+        light.position.set(5,22,4);
+        this._scene.add(light);
+    }
+
+    _setupModel() {       
+    }
+
+    resize() {
+        const width = this._divContainer.clientWidth;
+        const height = this._divContainer.clientHeight;
+
+        this._camera.aspect = width/height;
+        this._camera.updateProjectionMatrix();
+
+        this._renderer.setSize(width,height);
+    }
+
+    render(time) {
+        this._renderer.render(this._scene, this._camera);
+        this.update(time);
+        requestAnimationFrame(this.render.bind(this));  //렌덤 매서드 반복
+    }
+
+    update(time) {
+        time *=0.001;
+        // this._cube.rotation.x=time;
+        // this._cube.rotation.y=time;
+    }
+}
+
+
+window.onload=function() {
+    new App();
+}
+//window.onload : 순서대로 실행되는 프로래밍 작동방식과 충돌하지 않기 위해 항상 마지막에 실행 되도록 설정하는 코드
