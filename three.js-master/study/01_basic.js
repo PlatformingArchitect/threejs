@@ -2,18 +2,18 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { ColladaLoader } from 'three/examples/jsm/loaders/ColladaLoader';
 
-let object3D
-
 class App{
     constructor() {
         const divContainer = document.querySelector("#webgl-container");   // id가 webgl-container인 div를 가져와서 divContainer로 저장
         this._divContainer = divContainer;  //다른 method에서도 불러올 수 있도록 this 설정
 
-        const renderer = new THREE.WebGLRenderer({antialias:true});
+        const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true}); 
+        //배경 검정으로 하고 aplpha : true로 투명화+css에서 배경 그라디언트
         renderer.setPixelRatio(window.devicePixelRatio);
         divContainer.appendChild(renderer.domElement); //캔버스 형식의 돔객체
         this._renderer=renderer;
-
+        this._renderer.setSize(window.innerWidth,window.innerHeight);
+        
 
 
         //collada 로드
@@ -36,8 +36,9 @@ class App{
         this._setupLight();
         this._setupModel();
         this._setupControls();
+        this._setupBackground();
 
-        window.onresize = this.resize.bind(this);  //창의 크기가 바뀌며 렌더와 카메라가 다시 잡혀야해서 리사이즈 사용
+        window.onresize = this.resize.bind(this);  //창의 크기가 바뀌면 렌더와 카메라가 다시 잡혀야해서 리사이즈 사용
         this.resize;
 
         requestAnimationFrame(this.render.bind(this));
@@ -61,6 +62,28 @@ class App{
 
     _setupControls() {
         new OrbitControls(this._camera, this._divContainer);
+        window.addEventListener('resize',onWindowResize);
+        function onWindowResize() {
+
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+          
+            renderer.setSize( window.innerWidth, window.innerHeight );
+          
+          }
+    }
+
+    _setupBackground() {
+        // 배경색+안개 설정
+        // this._scene.background = new THREE.Color("#ffffff");
+        // this._scene.fog = new THREE.Fog("#ffffff",20,100);
+        // this._scene.fog = new THREE.FogExp2("#ffffff",0.1);
+
+        //그리드 정
+        const grid = new THREE.GridHelper( 100, 10, 0x000000, 0x000000 );
+        grid.material.opacity = 0.2;
+        grid.material.transparent = true;
+        this._scene.add( grid );
     }
 
     _setupLight() {
@@ -123,13 +146,14 @@ class App{
         this._camera.aspect = width/height;
         this._camera.updateProjectionMatrix();
 
-        this._renderer.setSize(width,height);
+        this._renderer.setSize(window.innerWidth,window.innerHeight);
     }
 
     render(time) {
         this._renderer.render(this._scene, this._camera);
         this.update(time);
         requestAnimationFrame(this.render.bind(this));  //렌덤 매서드 반복
+        
     }
 
     update(time) {
